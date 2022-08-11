@@ -1,0 +1,71 @@
+Docker images
+Official Images:https://github.com/docker-library/official-images (or)
+https://github.com/docker-library/docs (or)
+https://github.com/
+docker-library/docs/tree/master/python
+docker search ubuntu
+docker history<image_name>->Get history of image/details of each layer
+docker image inspect<image_name>
+docker pull ubuntu->Pull an image from DockerHub
+docker pull hello-world
+docker image rm<image_name>->Removes an image
+docker rmi<image_name>->Another command to Remove an image
+docker image prune -a>Remove all unused docker images;containers that are not using these images
+
+By default,you are prompted to continue.To bypass the prompt,use the -f or --force flag.
+You can limit which images are pruned using filtering expressions with the filter flag.
+For example,to only consider
+docker image prune -a --filter"until-24h"
+
+docker image tag SOURCE_IMAGE[:TAG]TARGET_IMAGE[:TAG]>Rename an image
+docker image push<image>->Push image to docker repository(need to login,see docker login -- help)
+docker login -u<user_name><URL>;URL can be left blank if pushing to DockerHub
+docker login -u<user-name>-p<password/token><URL>
+docker logout
+
+Docker containers
+https://container.training/intro-selfpaced.yml.html#103
+https://rakeshjain-devops.medium.com/
+elucidating-containers-and-container-runtimes-b4897b45b377
+
+Example images:
+hello world(tutum)
+jpetazzo/clock
+Jenkins,Nexus3,Ubuntu,Nginx
+docker container run jpetazzo/clock
+docker ps
+                      
+docker run -it ubuntu;apt update -y;apt-get install -y iputils-ping;apt install
+figlet;figlet DevopsI
+Ctrl+p+q->come out of interactive mode
+
+
+docker logs <container id>
+docker logs -f <container id>
+docker logs -f --tail <number> <container id> -> get live logs one line at a time
+
+docker run =p HOST_PORT:CONTAINER_PORT -e ENV_VAR=VALUE COMMAND
+(https://www.sciencedirect.com/topics/computer-science/registered-port)
+
+docker run -it -p 80:5000 kunchalavikram/flask-simpledetails:v1
+
+docker container run --publish 80:80 nginx
+docker container run --publish 80:80 --detach nginx
+docker container run --publish 80:80 -d nginx
+
+docker container attach nginx -> Reattach the container to terminal/std_output
+
+
+
+Docker Registry
+registry:2
+https://docs.docker.com/registry/deploying/
+https://docs.docker.com/registry/spec/api/
+https://www.exoscale.com/syslog/setup-private-docker-registry/
+Aregistry can be considered private if pulling requires authentication
+docker login -u<user-name>-p<password><ReposURESle Easy
+Once you login,aauth token will be saved under~/.docker/config.json in user's home
+directory
+It is username:password base64 encoded
+echo -n'username:password'|base64->To manually encode
+echo'ENCODED_VALUE'|base64 -dI>To decode

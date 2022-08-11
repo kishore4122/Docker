@@ -1,0 +1,331 @@
+Docker Compose
+**************
+https://docs.docker.com/compose/networking/
+https://vsupalov.com/docker-arg-env-variable-guide/
+https://takacsmark.com/docker-compose-tutorial-beginners-by-example-basics/
+https://github.com/kunchalavikram1427/voting-app
+https://github.com/dockersamples/example-voting-app
+
+
+Install Docker Compose on linux (manually from github releases page)
+********************************************************************
+	1. github releases page --- https://github.com/docker/compose/releases
+	2. Copy the link address of Docker-Compose based on your linux version (e.g: linux-x86_64)
+	3. using wget download it 
+	4. Give the executeable permission to the downloaded file
+		$chmod a+x docker-compose-linux-x86_64
+	5. move this file to PATH
+		$echo PATH
+		$mv docker-compose-linux-x86_64 /usr/bin/docker-compose
+		$ ls -l (make sure it has executable permissions)
+
+
+1. Docker Compose is used to run multiple containers as a single service. 
+2. For example, an application requires both WORDPRESS and MySQL containers, 
+	you could create one file which would start both the containers as a service (docker compose) or 
+	start each one separately (docker run) 
+3. All services are to be defined in YAML format
+
+	Compose file: docker-compose.yml 
+	Bring up the app: docker-compose up -d 
+	Bring down the app: docker-compose down
+
+Docker Compose Syntax
+**********************
+	version: '3' # if no version is specified then v1 is assumed. 
+	services: # containers. same as docker run
+		service_name: # container name. this is also DNS name inside network 
+			image: # name of the image
+			command: # Optional, replace the default CMD specified by the image
+			environment: # same as -e in docker run 
+			ports: # same as -p in docker run
+			volumes: # same as -v in docker run 
+		service_name2:
+	volumes: # Optional, same as docker volume create
+	networks: # Optional, same as docker network create
+
+
+	Syntax of Docker-compose Example-01:
+	------------------------------------
+		version: 3 
+		services:
+			wp:
+				image: wordpress:latest
+				env:
+				ports:
+				- 80:80
+				volumes:
+				- wp_data:/var/lib/wordpress
+				networks: 
+				- my_net
+			db:
+				image: mysql:latest
+				env:
+				volumes:
+				- db_data: /var/lib/mysql 
+				networks:
+				- my_net
+		volumes:
+		- db_data 
+		- wp_data
+		networks: 
+		- my_net
+
+
+		Syntax of Docker-Compose file with environments:
+		-----------------------------------------
+
+		.env file-> a file with key value pairs used to put values into the docker-compose.yml & 
+		docker stack file which is in the same folder. It's exclusively a docker-compose.yml thing.
+	
+			.env
+			VARIABLE_NAME=some value
+			OTHER_VARIABLE_NAME=some other value, like 5
+
+			USAGE:
+			------
+			version: '3'
+			services:
+				plex:
+					image: linukserver/plex
+					environment:
+						- env_var_name=$(VARIABLE_NAME) #here it is, it get VARAIABLE_NAME form .env file
+
+		Example-01
+		----------
+			version: '3'
+			services:
+				web01:
+					image: 
+					container_name:
+					hostname:
+					environment:
+						- HOME=/home
+					env_file: 
+						- env_file_name
+					depends on:
+						- web02
+					volumes:
+						- "vol-01:/var/lib/"
+					networks:
+						- front-end
+						- back-end
+					ports:
+						- 80:80
+
+
+				web02: 
+					build:
+						context: /java
+						dockerfile: my-dockerfile 
+						args:
+							- repo: my-repo 
+							- build: 01 
+							image: web02
+					container_name:
+					hostname:
+					environment:
+						- HOME=/home
+					volumes:
+						- "vol-01:/var/lib/"
+					networks:
+						- front-end
+					ports:
+						- 80:80
+			volumes:
+				vol-01
+			networks:
+				front-end
+				back-end
+
+		Example-02
+		---------- 
+			version: "3"
+			services:
+				app:
+					build:
+						context: .
+						args:
+							- IMAGE_VERSION=3.7.0-alpine3.8 
+					image:takacsmark/flask-redis:1.0
+					environment:
+						- FLASK_ENV=development
+					ports:
+						- 5000:5000
+				redis:
+					image: radis :4.8.11-alpine
+
+		Use env_file to pass environment variables: 
+			version: "3"
+			services:
+				app
+					build:
+						context: .
+						args:
+							- IMAGE_VERSION=3.7.0-alpine3.8 
+					image: takacsmark/flask-redis:1.e
+					env_file: 
+						- .env.txt
+					ports:
+						- 80:5000	
+					networks:
+						- mynet
+				redis:
+					image: redis:4.6.11-alpine 
+					networks:
+						- mynet
+					volumes:
+						- mydata:/data
+			networks:
+				mynet:
+			volumes:
+				mydata:
+
+
+			.env.txt file:
+			PYTHON_VERSION=3.7.0-alpine3.8
+			REDIS_VERSION=4.0.11-alpine
+			DOCKER_USER=admin
+
+
+			version: "3"
+			services:
+				app
+					build:
+						context: .
+						args:
+							- IMAGE_VERSION=${PYTHON_VERSION}
+					image: ${DOCKER_USER}/flask-redis:1.e
+					env_file: 
+						- .env.txt
+					ports:
+						- 80:5000	
+					networks:
+						- mynet
+				redis:
+					image: redis:${REDIS_VERSION} 
+					networks:
+						- mynet
+					volumes:
+						- mydata:/data
+			networks:
+				mynet:
+			volumes:
+				mydata:
+
+
+
+
+Docker Compose Versions
+***********************
+	Version 01
+	----------
+		1. Compose files that do not declare a version are considered "version 1"
+		2. Do not support named volumes, user-defined networks or build arguments
+		3. Every container is placed on the default bridge network and is reachable from every other container at its IP address. You need to use links to enable discovery between containers
+		4. No DNS resolution using container names
+
+	Version 02
+	----------
+		1. Links are deprecated. DNS resolution through container names 
+		2. All services must be declared under the 'services' key
+		3. Named volumes can be declared under the volumes key, and networks can be declared under the networks key
+		4. New bridge network to connect all containers
+
+	Version 03
+	----------
+		Support for docker swarm
+
+
+Example of a Wordpress and MySql with Docker Compose
+*****************************************************
+	Version: 3.9
+	services: 
+		wordpress:
+			image: wordpress:latest
+			depends_on:
+				- mysql
+			ports:
+				- 80:80
+			environment:
+				APP: website
+				VERSION: 22
+				WORDPRESS_DB_HOST: mysql
+				WORDPRESS_DB_NAME: wordpress
+				WORDPRESS_DR_USER: wordpress 
+				WORDPRESS_DB_PASSWORD: wordpress
+			volumes:
+				- wordpress_data:/var/www/html
+			networks: 
+				- my_net
+			mysql:
+				image: mariadb:latest 
+			environment:
+				MYSQL_ROOT PASSWORD: wordpress 
+				MYSQL_DATABASE: wordpress
+				MYSQL_USER: wordpress 
+				MYSQL_PASSWORD: wordpress 
+			volumes:
+				- mysql_data:/var/lib/mysql
+			networks: 
+				- my_net
+			restart: always
+	volumes:
+		mysql_data:
+		wordpress_data:
+	networks:
+		my_net:
+
+
+	Services file: docker-compose.yml
+	Bring up: docker-compose up -d  ($docker-compose -f docker-compose-dev.yml up -d)
+	Bring down: docker-compose down ($docker-compose -f docker-compose-dev.yml down)
+	Process state: docker-compose ps  ($docker-compose -f docker-compose-dev.yml ps)
+
+Example of a Wordpress and MySql with Docker Compose Image Build
+****************************************************************
+	version: 3.9
+	services: 
+		wordpress:
+			build:
+				context: .
+				dockerfile: Dockerfile-wordpress
+				image: wordpress
+				container_name: wordpress
+			depends_on:
+				- mysql
+			ports:
+				- 80:80
+			environment:
+				APP: website
+				VERSION: 22
+				WORDPRESS_DB_HOST: mysql
+				WORDPRESS_DB_NAME: wordpress
+				WORDPRESS_DR_USER: wordpress 
+				WORDPRESS_DB_PASSWORD: wordpress
+			volumes:
+				- wordpress_data:/var/www/html
+			networks: 
+				- my_net
+			mysql:
+				image: mariadb:latest 
+			environment:
+				MYSQL_ROOT PASSWORD: wordpress 
+				MYSQL_DATABASE: wordpress
+				MYSQL_USER: wordpress 
+				MYSQL_PASSWORD: wordpress 
+			volumes:
+				- mysql_data:/var/lib/mysql
+			networks: 
+				- my_net
+			restart: always
+	volumes:
+		mysql_data:
+		wordpress_data:
+	networks:
+		my_net:
+
+
+
+	To build only image: docker-compose build
+	build + deploy: docker-compose up -d

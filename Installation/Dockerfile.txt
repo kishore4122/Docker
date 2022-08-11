@@ -1,0 +1,431 @@
+Dockerfile
+----------
+	Dockerfile is essentially the build instructions to build your own docker image.
+	It is a text document that contains all commands to assemble the image.
+	A Docker image typically consists of:
+		1. A base Docker image on top of which we build our own Docker image.
+		2. A set of tools and applications to be installed in the new Docker image.
+		3. A set of files to be copied into the Docker image (eg. configuration files, application bunaries).
+		4. Environment variables, health check commands etc.
+
+Dockerfile Contents:
+--------------------
+	1. FROM : defines the base image used to start the build process
+	2. MAINTAINER/LABEL : definesafull name and email address of the image creator
+	3. COPY : copies one or more files from the Docker host into the Docker image
+	4. RUN : runs commands while image is being built from the Dockerfile and saves result as a new layer
+	5. ARG : to supply arguments while building to the image
+	5. ENV : to supply environment variables to the image
+	6. EXPOSE : exposesaspecific port to enable networking between the container and the outside world
+	7. VOLUME : is used to enable access from the container toadirectory on the host machine
+	8. WORKDIR : used to set default working directory for the container.Similar to cd in the container
+	9. CMD : command that runs when the container starts
+	10. ENTRYPOINT : command that runs when the container starts
+	11. HEALTHCHECK : to determine the health ofacontainer/application.Queries the health endpoint
+
+
+Build Image
+-----------
+	$docker build -t <image-name> .
+		e.g: $docker build -t kishore4122/nginx:1.0 .
+	$docker build -f <Dockerfile-name> -t <image-name> .
+		e.g: $docker build -f Dockerfile_dev -t kishore4122/nginx:1.0 .
+			here . indicates current working directory
+
+Build Context
+-------------
+   1. The docker build command builds an image fromaDockerfile using a context, which are a set of files/directories at a specified location PATH
+   2. These files and folders are the Docker build context
+   3. The build is run by the Docker daemon,not by the CLI
+   4. The first thingabuild process does is send the entire context(current working directory contents) recursively to the daemon as Tarball
+
+
+
+FROM
+----
+   1. This is the first instruction in the Dockerfile. Although ARG can be used before FROM
+   2. Represents the base image for the Dockerfile
+   3. A Docker image consists of layers.Each layer adds something to the final Docker image.
+              #The base image 			#Build Arguments
+              FROM ubuntu:latest 		ARG TAG=latest
+                                    	#The base image
+                                    	FROM ubuntu:${TAG}
+                                    
+
+ARG
+---
+   1. ARG are also known as build-time variables
+   2. They are only available during image build from Dockerfile with an ARG instruction
+   3. Running containers can't access values of ARG variables
+   4. IfaDockerfile expects various ARG variables but none are provided when running
+   		the build command,there will be an error message.This can be avoided by
+   		providingadefault value
+   5. ARG values can be easily inspected after an image is built,by viewing the docker
+   		history of an image
+   6. Provided using --build-arg<ARG-name>=<value>with docker build command
+             #Arguments					#Default Arguments
+             FROM busybox				ARG NODE_VERSION=8.11-slim
+             ARG buildno				FROM node:$NODE_VERSION
+             ARG user=someuser
+           
+             #docker build -t kishore4122/node:2.0 --build-arg NODE_VERSION=apline .
+
+ https:// docs docker com/engine/reference/huilder/#understand-how-arg-and-from-interact
+
+
+LABEL
+-----
+   1. The LABEL instruction adds metadata to an image.
+   2. A LABEL isakey-value pair.To include spaces withinaLABEL value,use
+   		quotes and backslashes for multilines
+   
+   #Labels:
+   		LABEL"com.example.vendor"="ACME Incorporated"
+   		LABEL com.example.label-with-value="foo"
+   		LABEL version="1.0"
+   		LABEL description="This text illustrates\
+   		that label-values can span multiple lines."
+
+    To view an image's labels,use the docker image inspect command
+    (or)
+    docker image inspect --format=''myimage
+
+COPY
+----
+   1. COPY command copies one or more files from the Docker host into the Docker image.
+   2. Can copyafile oradirectory from the Docker host to the Docker image.
+    
+    #Copy files: COPY <SRC> <DEST>
+    COPY . .
+    COPY main.py/tmp
+    
+    #Copy contents ofadirectory
+    COPY /myapp/config/prod /myapp/config
+    
+    #Copy multiple files.Destination to end with /
+    COPY /myapp/config/prod/conf1.cfg /myapp/config/prod/conf2.cfg /myapp/config/
+    COPY*.txt ./
+    COPY*.jar /app
+
+ADD
+---
+  1. ADD command also copies one or more files/directories from the Docker host into the Docker image.
+  2. But,it can also extract TAR files from the Docker host into the Docker image
+  		and download files fromaURL and copy them into the Docker image.
+  3. It eliminates the needed for untar and download utilities like wget and curl.
+   
+   #Add files: ADD <SRC> <DEST>
+   ADD home.txt /mydir/
+   ADD /source/file /path
+   ADD myapp.tar /myapp/
+   ADD http://source.file/url /destination/path
+                       
+
+RUN
+---
+  1. The RUN commands are executed during build time of the Docker image,so RUN commands are
+     	only executed once
+  2. They can be used to install utilities,applications,extract files,or other command line
+     	activities which are necessary to run to prepare the Docker image
+  3. Every RUN instruction will createanew layer on top of the current image and commit the
+     	results.
+  4. Has2forms
+        1. RUN <command> (shell form, the command is run in a shell, /bin/sh -c on Linux)
+        2. RUN ["executable", "param1", "param2"] (exec form)
+      
+      #Run Commands
+      RUN apt-get install iputils-ping
+      RUN pwd
+      RUN echo"hello world"
+      RUN /bin/bash -c 'source$HOME/.bashrc; echo $HOME'
+      RUN ["/bin/bash", "-c", "echo hello"]
+      
+      (BAD PRACTICE)									(GOOD PRACTICE)
+      #Dockerfile										#Dockerfile
+		FROM ubuntu											FROM ubuntu:rolling
+		RUN apt-get install -y wget							RUN apt-get install wget && \
+		RUN wget https://.../downloaded file.tar 			wget https://.../downloadedfile.tar && \
+		RUN tar xvzf downloaded file.tar 					tar xvzf downloaded file.tar && \
+		RUN rm downloaded file.tar 							rm downloaded file.tar && \
+		RUN apt-get remove wget								apt-get remove wget
+
+
+ENV
+---
+  1. ENV are also known as run-time variables
+  2. Unlike ARG,they are only accessible by containers during runtime.
+  3. ENV values can be overridden when startingacontainer
+  4. Override using -e<key>=<value>or --env with docker run command
+  	
+  	#Environment values 				#Environment values
+  	ENV MY_VAR my-value 				ARG buildtime_variable=default_value
+   	ENV MY_NAME="John Doe"				ENV env_var_name=$buildtime_variable
+  										ENV APACHE_RUN_USER www-data
+  	#no default value 					ENV APACHE_RUN_GROUP www-data
+  	ENV hey 							ENV APACHE_LOG_DIR/var/log/apache2
+  	
+  	#adefault value
+  	ENV foo/bar
+                          
+    $docker run --env MY_VAR=5 .....
+
+    $docker build --build-arg buildtime_variable=a_value .... 
+                          
+    Python Example
+		https://www.askpython.com/python/environment-variables-in-python                   
+        
+WORKDIR
+-------
+  1. WORKDIR instruction sets the working directory for any RUN,CMD,ENTRYPOINT,
+  		COPY and ADD instructions
+  2. If the directory specified by WORKDIR doesn't exist,it will be created
+  3. It is like createadirectory if it doesn't exist and then cd into that directory
+        
+        #Workdir						#Workdir
+        WORKDIR /a 						ENV DIRPATH=/path
+        WORKDIR b 						WORKDIR$DIRPATH/app
+        WORKDIR C 						RUN pwd
+        RUN pwd 						
+  The output of the pwd is /a/b/c 		The output of the pwd is /path/app
+
+
+EXPOSE
+------
+  1. EXPOSE instruction functions asatype of documentation between the person who builds the image and the person who runs the container,about which ports are intended to be published.
+  2. It does not actually publish the port.
+  3. You can specify whether the port listens on TCP or UDP,and the default is TCP if the protocol is not specified.
+  4. To actually publish the port when running the container,use the -p flag on docker run to publish
+                     
+                     #Port information for documentation
+                     
+                     EXPOSE 8081/tcp
+                     EXPOSE 80/udp
+                  
+                  $docker run -p 80:8081/tcp -p 80:80/udp ...
+
+
+VOLUME
+------
+  1. VOLUME instruction createsadirectory inside the Docker image which you can later mountavolume(directory)to from the Docker host
+  2. In other words, you can create a directory inside the docker image, e.g. called /app
+             
+             #Createadirectory inside the container
+             
+             VOLUME /app
+             VOLUME ["/var/log/"]
+             RUN mkdir /myvol
+                
+                $docker run -p 80:80 -v nginx_data:/app nginx
+
+
+CMD
+---
+  1. CMD command is used to give the default commands to be run when starting the container
+  2. It doesn't execute during image build stage like RUN
+  3. There can only be one CMD instruction in a Dockerfile. If you list more than one CMD then only the last CMD will take effect
+  4. These commands run only when there is no argument specified while running the container
+  5. You can check the default CMD of an image by docker image inspect
+  6. Has3forms
+  		CMD ["executable", "param1", "param2"] (exec form, this is the preferred form)
+     	CMD ["param1", "param2"] (as default parameters to ENTRYPOINT)
+     	CMD command param1 param2 (shell form)
+  
+  #CMD
+
+	#If you use the shell form of the CMD,then the<command>will execute in/bin/sh -c
+		FROM ubuntu
+		CMD echo "This is a test." | wc -
+	
+	#If you want to run your<command>withoutashell then you must express the command as a JSON array and give the full path to the executable
+		FROM ubuntu
+		CMD ["/usr/bin/wc","-- help"]
+
+	# can we replace the default CMD -> yes
+		CMD sleep 5
+		CMD ["sleep", "5"]
+		CMD ping localhost
+		CMD ["/bin/ping", "localhost"]
+
+		$docker run -it ubuntu ping 8.8.8.8
+                                      
+   When to use CMD?
+  	1. The best way to useaCMD instruction is by specifying default programs that should run when users do not input arguments in the command line.
+    2. This instruction ensures the container is inarunning state by starting an application as soon as the container image is run
+  	3. CMD can be easily replaced while using docker run to startacontainer
+  
+  		#Sample Dockerfile
+   		FROM ubuntu:trusty
+   		CMD ["/bin/ping", "localhost"]
+        
+        $docker build -t test.
+        $docker run -t test
+        $docker run -t test ping 8.8.8.8     
+
+ENTRYPOINT
+----------
+  1. ENTRYPOINT is also used to give the default commands to be run when starting the container.It works similarly to CMD
+  2. Both CMD and ENTRYPOINT can be overridden when starting the docker container
+  3. It will be the last instruction of the Dockerfile
+  4. ENTRYPOINT kind of makes your Docker image an executable command itself, which can be started up and which shut down automatically when finished
+  5. Has2forms
+     	1. ENTRYPOINT ["executable", "param1", "param2"] (exec form,this is the preferred form)
+     	2. ENTRYPOINT command param1 param2 (shell form)   
+
+  #ENTRYPOINT
+	ENTRYPOINT ["node", "v"]
+	ENV name Darwin
+	ENTRYPOINT echo "Welcome, $name"
+	ENTRYPOINT ["/bin/echo", "Welcome, $name"]              
+                          
+
+  When to use ENTRYPOINT?
+  	1. ENTRYPOINT should be used in scenarios where you want the container to behave exclusively as if it were the executable it's wrapping
+  	2. When you don't want or expect the user to override the executable you've specified
+  	3. You can achieve the same thing with CMD,but the use of ENTRYPOINT sends a strong message that this container is only intended to run this one command
+  	4. ENTRYPOINT can also be easily replaced with --entrypoint flag
+ 		
+ 		#Sample Dockerfile.
+ 			FROM ubuntu:trusty
+ 			ENTRYPOINT ["/bin/ping", "localhost"]
+
+            $docker build -t ubuntu_ping .
+            $docker run -t ubuntu_ping
+            $docker run -t --entrypoint hostname ubuntu_ping
+    
+    
+
+Using CMD & ENTRYPOINT together
+-------------------------------
+	1. When both an ENTRYPOINT and CMD are specified, the CMD string(s) will be appended to the ENTRYPOINT in order to generate the container's command string
+	2. Final Executable = ENTRYPOINT + CMD
+	3. CMD value can also be easily overridden by supplying arguments to docker run
+
+
+	#Sample Dockerfile 						#Sample Dockerfile
+		FROM ubuntu: trusty 					FROM ubuntu:trusty 
+		CMD ["World!"]							CMD ["localhost"]
+		ENTRYPOINT ["echo", "Hello"]			ENTRYPOINT ["ping"]
+
+ 
+ 	$docker build -t ubuntu_ping .
+	$docker run -t ubuntu_ping
+	$docker run -t ubuntu_ping Vikram
+
+[root@ip-172-31-4-240 Dockerfiles]# docker run -t ubuntu_with_ping 
+Hello World!!
+[root@ip-172-31-4-240 Dockerfiles ] # docker
+Hello Vikram.
+[root@ip-172-31-4-240Dockerfiles ]#
+
+
+
+Shell form vs Executable form
+------------------------------
+	1. When using the shell form, the specified binary/command is executed with an 
+		invocation of the shell using /bin/sh -c
+	2. You can see this clearly if you run a container and then look at the docker 
+		ps output
+
+		#Sample Dockerfile 									#Sample Dockerfile
+			FROM ubuntu: trusty 								FROM ubuntu: trusty 
+			CMD ping localhost 									CMD ["/bin/ping", "localhost"]
+
+		$docker build -t my_ubuntul . 								$docker build -t my_ubuntu2 .
+		$docker run -t -d --name c1  my_ubuntul 					$docker run -t -d --name c2 my_ubuntu2
+		$docker exec -it c1 top 									$docker exec -it c2 top
+
+
+Shell or Executable?
+--------------------
+	1. /bin/sh won't forward any POSIX signals to child processes. 
+		So, bash/sh cannot be PID 1
+	2. Not all docker images has shell binary inside it. So shell 
+		form commands cannot be executed, and hence the container fails
+
+ 
+HEALTHCHECK
+-----------
+	1. Health Check is all about checking the health of a Docker container
+	2. If the process/application is running successfully in the container, it is  considered healthy
+	3. Mandatory for production applications
+	4. Sometimes our application crashes but the process still runs. In these scenarios, we might not know the exact status of the container. So proper health checks are to be created
+	5. There are two different ways to configure the HEALTHCHECK in docker:
+		1. HEALTHCHECK [OPTIONS] CMD command
+		2. HEALTHCHECK NONE
+
+		HEALTHCHECK CMD curl --fail http://<URL or Health Endpoint> || exit 1
+	
+	. The curl command checks whether the application is running or not making a request to the URL 
+	. If the request returns a 200, it will return exit code 0; if the application crashes, it will  return exit code 1
+
+
+
+-------------------
+dockerfile
+-------------------
+https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
+https://docs.docker.com/language/
+https://github.com/docker-library/official-images
+https://docs.docker.com/engine/reference/builder/
+https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
+https://learnk8s.io/blog/smaller-docker-images
+https://adotpalindrome.wordpress.com/2020/02/25/three-ways-to-create-docker-images-for-java/
+http://tutorials.jenkov.com/docker/dockerfile.html
+https://vsupalov.com/docker-arg-env-variable-guide/
+https://codefresh.io/docker-tutorial/not-ignore-dockerignore-2/
+https://sysdig.com/blog/dockerfile-best-practices/
+https://cloud.google.com/architecture/best-practices-for-building-containers
+https://docs.microsoft.com/en-us/visualstudio/docker/tutorials/docker-tutorial
+https://developer.cisco.com/docs/iox/#!tutorial-build-sample-docker-type-python-simple-app/
+tutorial-build-sample-docker-type-python-simple-app
+https://www.section.io/engineering-education/how-to-containerize-a-python-application/
+https://scoutapm.com/blog/how-to-use-docker-healthcheck
+https://www.indellient.com/blog/how-to-dockerize-an-angular-application-with-nginx/
+https://wkrzywiec.medium.com/build-and-run-angular-application-in-a-docker-container-b65dbbc50be8
+https://gobyexample.com/hello-world
+https://www.askpython.com/python/environment-variables-in-python
+https://github.com/wkrzywiec/aston-villa-app.git
+************
+
+Extra Packages for Enterprise Linux (EPEL)
+------------------------------------------
+CentOS Stream 8: 
+dnf config-manager --set-enabled powertools
+dnf install epel-release epel-next-release
+
+Setup Java & Maven
+-------------------
+Java-8:
+sudo yum list | grep openjdk
+sudo yum install -y java-1.8.8-openjdk
+sudo yum install -y java-1.8.8-openjdk-devel.x86_64
+
+Java-11:
+sudo amazon-linux-extras install epel
+sudo amazon-linux-extras install java-openjdk11 -y
+sudo yun install epel-release java-11-openjdk-devel -y(ignore)
+
+sudo alternatives --config java
+sudo /usr/sbin/alternatives--set java /usr/lib/jvm/jre-1.8.8-openjdk/bin/java
+
+Maven:
+cd /opt
+sudo curl -0 https://dlcdn.apache.org/maven/maven-3/3.8.4/binaries/apache-maven-3.8.4-bin.tar.gz 
+sudo tar -xvzf apache-maven-3.8.4-bin.tar.gz
+echo "export M2_HOME="/opt/apache-maven-3.8.4" >> ~/.bashre
+echo "export PATH="$PATH:/opt/apache-maven-3.8.4/bin" >> ~/.bashrc 
+source/.bashre
+mvn -version
+
+
+
+1. FROM defines the base image 
+2. 
+
+
+
+ENV -> just refere this pthon example for ENV in Dockerfile
+		https://www.askpython.com/python/environment-variables-in-python
+
+
+

@@ -1,0 +1,31 @@
+docker volume
+**************
+
+	https://docs.docker.com/storage/
+	https://www.baeldung.com/ops/docker-volumes
+	https://www.section.io/engineering-education/sharing-data-between-docker-containers/
+
+	Named volumes/Docker Volumes: Can persist data after we restart or remove a container.
+	Also, it's accessible by other containers. These volumes are created inside /var/lib/docker/volume local host directory.
+
+	Bind mounts: Can persist data after we restart or remove a container.
+	As we can see, named volumes and bind mounts are the same, except the named volumes can be found under a specific host directory, and bind mounts can be any host directory.
+
+
+	$docker volume 1s
+	$docker volume create test 
+	$docker volume inspect test 
+	$docker volume rm test 
+	$docker volume prune
+
+	--volumes-from
+	
+	Bind:
+		$docker run -d --name web -p 88:80 -v $PWD/index.html:/usr/share/nginx/html/index.html nginx
+		$docker run -d --name web -p 88:80 -v $PWD/nginx-data:/usr/share/nginx/html nginx
+
+	Named:
+	$docker run-d---name web -p 88:80 -v nginx-data:/usr/share/nginx/html nginx
+	$docker run -d -p 8080:8880 -p 50000:50000 -v jenkins-backup:/var/jenkins_home jenkins/jenkins:lts
+
+	$docker run -d -v nginx_backup:/usr/share/nginx/html -v nginx_logs:/var/log/nginx --name web -p 80:80 nginx:latest

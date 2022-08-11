@@ -1,0 +1,48 @@
+sudo yum update -y
+
+## This step assumes you are using the Amazon Linux 2 AMI for your instance
+sudo amazon-linux-extras install docker
+
+sudo service docker start
+sudo systemctl enable docker
+
+## Add the ec2-user to the docker group so you can execute Docker commands without using sudo.
+sudo usermod -a -G docker ec2-user
+
+
+##
+sudo newgrp docker
+
+docker info
+
+
+Setup Java & Maven
+-------------------
+Java-8:
+sudo yum list | grep openjdk
+sudo yum install -y java-1.8.8-openjdk
+sudo yum install -y java-1.8.8-openjdk-devel.x86_64
+
+Java-11:
+sudo amazon-linux-extras install epel
+sudo amazon-linux-extras install java-openjdk11 -y
+sudo yun install epel-release java-11-openjdk-devel -y(ignore)
+
+sudo alternatives --config java
+sudo /usr/sbin/alternatives--set java /usr/lib/jvm/jre-1.8.8-openjdk/bin/java
+
+Maven:
+cd /opt
+sudo curl -0 https://dlcdn.apache.org/maven/maven-3/3.8.4/binaries/apache-maven-3.8.4-bin.tar.gz 
+sudo tar -xvzf apache-maven-3.8.4-bin.tar.gz
+echo "export M2_HOME="/opt/apache-maven-3.8.4" >> ~/.bashre
+echo "export PATH="$PATH:/opt/apache-maven-3.8.4/bin" >> ~/.bashrc 
+source/.bashre
+mvn -version
+
+
+Extra Packages for Enterprise Linux (EPEL)
+------------------------------------------
+CentOS Stream 8: 
+dnf config-manager --set-enabled powertools
+dnf install epel-release epel-next-release

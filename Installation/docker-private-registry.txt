@@ -1,0 +1,90 @@
+Contents
+	Setup Docker Registry2
+	Setup Docker Nexus Repository
+	Setup ECR Repository
+
+Setup Docker Registry2
+----------------------
+https://docs.docker.com/registry/deploying/
+https://docs.docker.com/registry/spec/api/
+https://www.exoscale.com/syslog/setup-private-docker-registry/
+
+
+
+Setup Docker Nexus Repository
+-----------------------------
+
+https://medium.com/hackernoon/deploy-private-docker-registry-on-gcp-with-nexus-terraform-and-packer-1af2b6a2a9c9
+
+https://dzone.com/articles/how-to-publish-docker-iamges-on-private-nexus-repo
+
+1. Create a volume for nexus and run the nexus container
+	$ docker volume create --name nexus-data
+	$ docker run -d -p 8081:8081 --name nexus -v nexus-data:/nexus-data sonatype/nexus3
+
+2. Create a docker hosted repository in nexus with port 8082,
+	now stop and remove the nexus container. 
+
+	$docker container stop nexus
+	$docker container rm nexus
+
+3. Create a file (daemon.json) in /etc/docker/ folder and add the insecure-registries in json format to that file
+	
+	$cd /etc/docker/
+	$ vi daemon.json
+		{
+			"insecure-registries: ["ipaddressOfNexus:8082"]"
+		}
+
+4. Stop and remove the nexus container and restart the docker 
+	$docker container stop nexus
+	$docker container rm nexus
+
+	$systemctl restart docker
+
+5. Now start the nexus container
+	$docker run -d -p 80:8081 -p 81:8082 --name nexus -v nexus-data:/nexus-data sonatype/nexus3
+	$docker logs -f nexus
+
+6. Login to the docker registry
+	$docker login ipaddressOfNexus:81
+		it will ask the username and password. Enter the nexus username and password
+
+7. Now tag the image with nexus like DNSofNexus/image_name:tag (ipaddressOfNexus/nginx:2.0) and push this image to the nexus repository
+	$docker image tag nginx:latest localhost:81/nginx:2.0
+	$docker push localhost:81/nginx:2.0
+
+
+
+
+
+
+Setup ECR Repository
+--------------------
+https://docs.aws.amazon.com/cli/latest/userguide/
+https://docs.aws.amazon.com/cli/latest/userguide/welcome-examples.html
+
+https://aws.amazon.com/ecr/
+https://docs.aws.amazon.com/AmazonECR/latest/userguide/what-is-ecr.html
+https://docs.aws.amazon.com/AmazonECR/latest/userguide/get-set-up-for-amazon-ecr.html
+https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html
+
+Setup CLI
+---------
+Download the CLI, AMI linux comes by default
+https://docs.aws.amazon.com/cli/latest/userguide/
+Configure CLI
+	$aws configure
+	https://docs.aws.amazon.com/cli/latest/userguide/welcome-examples.html
+
+The credentials are stored under $PWD/.aws/credentials
+
+we cannot use our root account credentials to configure aws cli due to security consideration. So preferred way is to create an IAM user and give it necessary credentials to programmatically access AWS resources. If this user's details are compromised we can simply delete the user and revoke his access key.
+
+Create an IAM user:
+	Create an IAM user with programmatic access and then add this user to an IAM group which has administrative permissions, or
+	grant this user administrative permissions or
+	service specific permissions like AdministrativeAccess/AmazonEC2FullAccess etc 
+	Once done download the access key for the user.
+
+

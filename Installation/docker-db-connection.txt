@@ -1,0 +1,131 @@
+************ Running the Application and Database in default BRIDGE NETWORK ****************
+
+First Setup the DB container:
+	1. Create MYSQL container:
+		$ docker run -d --name db -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=test  mysql:latest
+
+	#In order to connect the Applciation with Database container we need the IPAddress of the Database container
+		$docker container inspect db   -- Copy the IPAddress of the Database container and paste it in Application file (db-connector_test.py)	
+
+	2. application file with name db-connector_test.py	and Database deatils are HardCoded.
+
+			# Install this on host machine so that your application container will connect to database containere
+			# pip3 install mysql-connector-python
+
+			import mysql.connector
+			from mysql.connector import Error
+	
+			# DB details (it is not Good Practice to HardCode the Database details)
+			db_host = "192.168.0.103" 
+			db_username = "root"
+			db_password = "root" 
+			db_name = "test"
+	
+			# Function to test the database connection
+			def create_server_connection (host_name, user_name, user_password): 
+				connection = None
+				try:
+					connection = mysql.connector.connect(
+						host-host_name,
+						user=user_name,
+						passwdeuser_password
+					)
+					print("[Success]: Connected to database!") 
+				except Error as err:
+					print("[Error]: '{err}"")
+			return connection
+
+			# Calling the DB test function
+			connection = create_server_connection(db_host, db_username, db_password)
+
+
+	3.Now run the Application
+		$python3 db-connector_test.py   --- it shows connection is success.
+
+
+	4. Now Containerize the application.
+		Dockerfile
+		----------
+			#python:3.9.7-alpine3.14 
+			FROM python: 3.9.12-slim
+			RUN pip install mysql-connector-python 
+			WORKDIR /app
+			COPY db-connector_test.py
+			ENTRYPOINT ["python", "db-connector_test.py"]
+
+		$docker build -t db-connector_test:1.0
+
+	5. Now run the Application container
+		$docker run -d  db-connector_test:1.0
+
+
+
+************************************************************************************************************
+
+
+///////////// Running Application and Database in CUSTOM BRIDGE NETWORK (my_net) /////////////////////////
+
+1. Create Custom Bridge Network
+		$docker network create my_net
+
+2. First Setup the DB container:
+	Create MYSQL container:
+		$ docker run -d --name db --net my_net -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=test  mysql:latest
+
+
+3. Application file (db-connector.py) with Database details as variables so that we can pass those values at container creation time
+	import mysql.connector
+	from mysql.connector import Error
+	
+	# DB details 
+	db_host = os.environ.get('DB_HOST') 
+	db_username = os.environ.get('DB_USER')
+	db_password = os.environ.get('DB_PASSWORD') 
+	db_name = os.environ.get('DATABASE')
+	
+	# Function to test the database connection
+	def create_server_connection (host_name, user_name, user_password): 
+		connection = None
+		try:
+			connection = mysql.connector.connect(
+				host-host_name,
+				user=user_name,
+				passwdeuser_password
+			)
+			print("[Success]: Connected to database!") 
+		except Error as err:
+			print("[Error]: '{err}"")
+		return connection
+
+	# Calling the DB test function
+	connection = create_server_connection(db_host, db_username, db_password)
+
+4.Containerize the Application	
+		Dockerfile
+		----------
+			#python:3.9.7-alpine3.14 
+			FROM python: 3.9.12-slim
+			RUN pip install mysql-connector-python 
+			WORKDIR /app
+			COPY db-connector.py
+			ENTRYPOINT ["python", "db-connector.py"]
+
+		$docker build -t db-connector:1.0
+
+5. Now run the Application container
+	$docker run -d --net my_net -e DB_HOST=db -e DB_USER=root -e DB_PASSWORD=root -e DATABASE=test db-connector:1.0
+
+
+
+
+
+
+
+
+
+$docker run -e MYSQL_ROOT_PASSWORD=admin -e MYSQL_DATABASE=wordpress --name mysql -v db:/var/lib/mysql -d mariadb:latest
+	$docker run -e WORDPRESS_DB_USER=root -e WORDPRESS_DB_PASSWORD=admin --name wordpress --link mysql:mysql -p 80:80 -v wp:/var/www/html -d wordpress
+
+	$docker network create my_net
+	$docker run -e MYSQL_ROOT_PASSWORD=admin -e MYSQL_DATABSE=wordpress --name mysql --net my_net -v db:/var/lib/mysql -d mariadb:latest
+	$docker run -e WORDPRESS_DB_USER=root -e WORDPRESS_DB_PASSWORD=admin --name wordpress --net my_net -p 80:80 -v nginx:/var/www/html -d wordpress

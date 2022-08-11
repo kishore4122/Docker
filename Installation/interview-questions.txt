@@ -1,0 +1,192 @@
+1. Explain Docker Architecture and its components 
+	2 Components: cli daemon 
+2. What is Hypervisor?
+	A hypervisor is a software that makes virtualization possible. It divides the host system and allocates the resources to each divided virtual environment. You can basically have multiple OS on a single host system. There are two types of Hypervisors:
+		Type 1: It's also called Native Hypervisor or Bare metal Hypervisor. It runs directly on the underlying host system. It has direct access to your host's system hardware and hence does not require a base server operating system. Ex: HyperV
+		Type 2: This kind of hypervisor makes use of the underlying host operating system. It's also called Hosted/Software Hypervisor. 
+		Ex: VirtualBox
+3. What is virtualization?
+	Virtualization is the process of creating a software-based, virtual version of something (compute, storage, servers, application, etc.). These virtual versions or environments are created from a single physical hardware system. Virtualization lets you split one system into many different sections which act like separate, distinct individual systems. A software called Hypervisor makes this kind of splitting possible. The virtual environment created by the hypervisor is called Virtual Machine.
+4. What is Containerization?
+	Usually, in the software development process, code developed on one machine might not work perfectly fine on any other machine because of the dependencies. This problem was solved by the containerization concept. So basically, an application that is being developed and deployed is bundled and wrapped together with all its configuration files and dependencies. This bundle is called a container. Now when you wish to run the application on another system, the container is deployed which will give a bug-free environment as all the dependencies and libraries are wrapped together. 
+5. What is a Docker Image?
+	Template that have your application binaries and its dependencies.
+6. What is a Docker Container?
+	Isolated process running in a isolated environment
+7. What is a Container Runtime Environment?
+	A container runtime, also known as container engine, is a software component that can run containers on a host operating system. 
+	https://www.aquasec.com/cloud-native-academy/container-security/conteiner-runtime/
+	e.g: Docker, Podman, Rkt, container-d
+9. Difference between Docker Image & Docker Container
+10. Difference between VM and Docker Container
+11. What are cgroups & Namespaces?
+12. List some important docker commands
+13. Why running Docker commands, a user is getting permission denied errors. How do you resolve?
+14. How to check total size occupied by docker home?
+		$docker system df
+15. How to check docker version and detailed information of the docker? 
+		$docker info
+16. How to create a Docker Container? What is the use of -d
+17. Describe the lifecycle of Docker Container?
+		The different stages of the docker container from the start of creating it to its end are called the docker container life cycle.
+		The most important stages are:
+		- Created: This is the state where the container has just been created new but not started yet.
+		- Running: In this state, the containet would be running with all its associated processes.
+		- Paused: This state happens when the running container has been paused. 
+		- Stopped: This state happens when the running container has been stopped. 
+		- Deleted: In this, the container is in a dead state.
+18. List all running and stopped containers
+	$docker ps -a
+19. List all images in a docker host
+	$docker image ls
+20. What is use of -i -t while running the docker container?
+21. How to run a command inside a container?
+	$docker exec -it <container-name> <command>
+22. How to name a container while creating?
+23. How to access a container from outside the docker host?
+24. How to stop & start a container?
+25. How to restart a container?
+26. How to check IP address of a container?
+27. How to kill all running containers?
+28. How to kill a container without docker rm?
+29. Difference between docker stop vs kill? SIGTERM vs SIGKILL
+30. Check running processes within a container?
+31. How to print all container IDs of running containers.
+32. How to save a container as a Image?
+	First stop the container and using commit command we can save container as a image
+		$docker commit 
+33. What is writtable layer in Docker?
+34. How to copy data to a container?
+	$docker cp <file.tx> <container-name>:/pathtocopy
+35. What is restart policy and how it affects a failed/stopped container? Supported: no, on-failure, always, unless-stopped 
+36. How to get live info on CPU, Memory usage, I/O of all the containers? 
+	$docker stats   -- provides CPU, MEMORY usage
+	$docker top     -- provice process information
+37. How to provide environment variables to a container?
+38. How to check logs of a container?
+39. Use of docker attach command?
+40. How to check the size of all docker images in your host?
+	$dokcer system df
+41. How to clean-up docker host?
+42. What is container registry? Mention few of them
+	Dockerhub, Nexus, JFrog, ECR, Azure Container Registry, Google Container Registry, Gitlab Container Registry.
+43. How to identify official docker images in Dockerhub?
+44. How to search for a particular docker image in Dockerhub
+45. How to download a docker image of a specific version/tag 
+46. How to delete a docker image?
+47. How to configure docker private registry running on http (non ssl)?
+	docker wont accept the registry running on http.
+	Inorder to accept we need to create a daemon.json file in /etc/docker/daemon.json
+		{
+			"insecure-registries": ["http://repo.company.com", "192.168.0.20:5000"]
+		}
+	$systemctl restart docker
+
+48. How to login to a docker registry?
+49. Where do docker host save the login information
+		Once you login, a auth token will be saved under ~/.docker/config.json in user's home directory 
+		It is username: password base64 encoded
+		echo -n 'username: password' | base64 -> To manually encode
+		echo 'ENCODED VALUE' | base64 -d -> To decode
+
+		cat $HOME/.docker/config.json
+		{
+			"auths": {
+				"https://index.docker.io/v1/": {
+					"auth": "ergsffgG35gsjqyxofbkfdyu7s22310MThA"
+				}
+			}
+		}
+
+50. How to share docker images across various hosts? 
+	Using Load & Save
+	$docker save nginx:latest > nginx.tar
+	$docker load < nginx.tar
+51. What are distroless images in Docker?
+	Images that doesnt have debugging mode (no shell)
+52. What is Image tagging?
+53. How to check various events in your docker host?
+54. What is docker HOME directory and can we change it from /var/lib/docker to any other location?
+	Sometimes, we may need to change the docker root directory if we are running out of disk space.data present by default under /var/lib/docker can be changed to the path since the disk is full (new path: /backup/docker)
+	
+	Take backup of the current directory using tar -zcvi docker-backup-$ (date +8s).tar.gz /var/lib/docker 
+	$systemctl stop docker
+
+	Create a directory "/backup" to set a new path: mkdir /backup
+	$rsync -avzh /var/lib/docker /backup
+
+	lets update systemd with new location
+	$vi /lib/systemd/system/docker-service
+	under [Service], do not remove any options on that line just add below option
+
+	ExecStart- ***** -g /backup/docker *******
+	save and exit
+	
+	OR
+	Above changes will effect for linux systems, if you want to apply new location changes for platform independent systems 
+	
+	open/create file "/etc/docker/daemon.json" and add below line
+
+	{
+		"data-root": "/backup-docker",
+		.....
+		.....
+	}
+
+	save and exit. 
+	Now restart docker service
+	$systemctl daemon-reload 
+	$systemctl start docker
+55. What is a dockerfile?
+56. What is .dockerignore?
+57. What is build context in Docker?
+58. Mention few best practices while writing a dockerfile
+59. Is it advisable to use latest tag of a docker image
+60. What is the difference between ADD and COPY instructions in Dockerfile?
+61. What is the difference between CMD and ENTRYPOINT instructions in Dockerfile?
+62. What is the difference between CMD and RUN instructions in Dockerfile?
+63. How to check the default CMD & Entrypoint of a Image?
+64. How do you supply arguments to a dockerfile.
+65. Can we have multiple CMD in Dockerfile?
+66. What is a Multistage dockerfile and its advantages?
+
+67. What is ONBUILD instruction in Dockerfile?
+	Docker ONBUILD command instruction is used to specify the commands that runs when the new docker image is used as a base image for another image (child image).
+	We can use this ONRUILD instruction where you need a static base image with a dynamic config value that changes in a new image or we can use in a situation where a new image is depend on previous image.
+	Assume that we create a dockerfile with various instruction and specifying ONBUILD instructions at the end of the dockerfile. 
+	When we build a image with current dockerfile using "docker build." command, this will create a new docker image but ONBUILD instruction will not applied into the current docker image.
+	This will be applied only when we use the newly created image as a base image in another dockerfile.
+	Lets take an example that we want to create a new image which has all prerequisite ready for running multiple applications or scripts. Finally we will use the "prerequisite" image as a base image to run our applications or scripts.
+	For this example, We have a created a sample dockerfile which creates a directory and place some script file as a "prerequisite" image. Also we have used ONBUILD instructions to run the scripts, but this ONBUILD instructions will be executed only into the new image only when we use "prerequisite" as a base image.
+	You can use any command instructions along with ONBUILD, but we have used some scripts to show the examples.
+
+	FROM centos
+	WORKDIR /data/myscript
+	COPY testping.sh uptime.sh date.sh .
+	ONBUILD ENTRYPOINT sh /data/myscript/testping.sh\
+		&& sh /data/myscript/uptime.sh\
+		&& sh /data/myscript/date.sh
+
+	$docker build -t prerequisite:1.0.
+
+	FROM prerequisite: 1.0
+		https://www.howtogeek.com/devops/how-to-use-dockerfile-onbuild-to-run-triggers-on-downstream-builds/
+
+68. Explain docker volumes and their need?
+69. What are shared volumes?
+70. Explain Docker networks?
+71. What is DNS resolution? DNS server in docker?
+72. Use of custom bridge networks?
+73. How to create a custom bridge network?
+74. Can we connect a container to multiple bridge networks & How? docker network connect 
+75. Use of --net-alias or --network-alias?
+76. Use of --links?
+77. What is overlay networking?
+78. What is docker compose? why it is needed?
+79. Can you build docker images using docker-compose?
+80. How will you ensure that a container 1 runs before container 2 while using docker compose?
+81. Is docker compose a production tool?
+82. Is it possible to use JSON instead of YAML for Docker Compose?
+	Yes, we can use JSON instead of YAML for writing a Docker Compose file. When we are using the JSON file for composing, we have to specify the filename with the following command:
+	$docker-compose-f docker-compose.json up
+83. What is docker swarm?

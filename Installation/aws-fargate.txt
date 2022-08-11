@@ -1,0 +1,2 @@
+AWS Fargate
+https://www.janbasktraining.com/blog/what-is-aws-fargate/

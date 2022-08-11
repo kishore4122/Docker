@@ -1,0 +1,49 @@
+while installing docker on centos or rehel, if you get this error
+
+Error:
+Problem: package podman-2.2.1-7.module+el8.3.1+9857+68fb1526.x86_64 requires runc >= 1.0.0-57,
+but none of the providers can be installed
+
+
+Hi, if it is of interest I can confirm that I had the same issue when trying to install Docker-CE from Docker-CE repo,
+on a fresh RHEL8, because of runc and its dependencies (mainly podman). 
+So it seems you can have either podman or docker but not both on rhel8, so if you need docker, 
+uninstall runc and its dependencies, if you need podman,
+disable the docker-CE repo "yum-config-manager --disable Docker-CE" .
+
+then
+
+Uninstall runc  -> $dnf remove runc
+ or 
+dnf -y module disable container-tools
+
+Setup Java & Maven
+-------------------
+Java-8:
+sudo yum list | grep openjdk
+sudo yum install -y java-1.8.8-openjdk
+sudo yum install -y java-1.8.8-openjdk-devel.x86_64
+
+Java-11:
+sudo amazon-linux-extras install epel
+sudo amazon-linux-extras install java-openjdk11 -y
+sudo yun install epel-release java-11-openjdk-devel -y(ignore)
+
+sudo alternatives --config java
+sudo /usr/sbin/alternatives--set java /usr/lib/jvm/jre-1.8.8-openjdk/bin/java
+
+Maven:
+cd /opt
+sudo curl -0 https://dlcdn.apache.org/maven/maven-3/3.8.4/binaries/apache-maven-3.8.4-bin.tar.gz 
+sudo tar -xvzf apache-maven-3.8.4-bin.tar.gz
+echo "export M2_HOME="/opt/apache-maven-3.8.4" >> ~/.bashre
+echo "export PATH="$PATH:/opt/apache-maven-3.8.4/bin" >> ~/.bashrc 
+source/.bashre
+mvn -version
+
+
+Extra Packages for Enterprise Linux (EPEL)
+------------------------------------------
+CentOS Stream 8: 
+dnf config-manager --set-enabled powertools
+dnf install epel-release epel-next-release

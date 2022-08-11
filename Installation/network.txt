@@ -1,0 +1,77 @@
+Docker Network
+--------------
+
+https://docs.docker.com/network/
+https://docs.docker.com/config/containers/container-networking/
+https://docs.docker.com/network/links/
+https://www.aquasec.com/cloud-native-academy/docker-container/docker-networking/
+https://stackoverflow.com/questions/41768157/how-to-link-containers-in-docker/
+https://dev.vividbreeze.com/docker-networking-bridge-network/
+https://foxutech.com/docker-bridge-networking/
+https://runnable.com/docker/basic-docker-networking/
+https://www.section.io/engineering-education/understanding-docker-networking/
+https://upcloud.com/community/tutorials/wordpress-with-docker/
+https://www.linkedin.com/pulse/poor-mans-load-balancing-docker-luis-herrera
+https://medium.com/patrik-bego/docker-networking-practical-example-23900904486e
+
+
+$docker network --help
+$docker network ls
+$docker network inspect bridge
+
+$docker container inspect <container id>
+$docker container inspect --format '{{.NetworkSettings.IPAddress}}' <container id>
+$docker container inspect --format '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' <container id>
+
+$docker network create --driver bridge my_net
+
+$docker network create --drive bridge --subnet 182.18.8.1/24 --gatewayy 182.18.0.100 wp-mysqlnetwork
+$docker container run -d --name new_nginx --network my_app_net nginx:latest
+$docker run -d --name web1 --network custom_bridge_01 nginx:alpine
+$docker container inspect --format '{{.NetworkSettings.Networks.bridge.IPAddress.}}' <container id>
+$docker network connect <network> <app>
+$docker network disconnect my_app_net webhsot -> Dynamically removes webhost container form my_app_net network
+
+
+Install IPUtils in nginx
+------------------------
+$docker run -d --name nginx nginx:latest
+$docker container exec -it nginx apt update -y && apt install inetutils-ping 
+
+bridge network table
+--------------------
+	$brctl show
+
+
+--links
+	$docker container run -d --name web2 nginx:alpine
+	$docker container run -d --name web1 --link web2:web2 nginx:alpine
+	$docker exec -it web1 bash
+	root@fjkdfdjkj:/#ping web2
+
+--net-alias or --network-alias
+	$docker network create my_net -> Creates a bridge network
+	$docker container run -d --net my_net --net-alias search elasticsearch:2
+	$docker container run -d --net my_net --net-alias search elasticsearch:2
+	$docker container run --rm --net my_net alpine nslookup search
+
+	$docker run -d --net mynet --name c1 --net-alias web kunchakavikram/hello-flask:v1
+	$docker run -d --net mynet --name c2 --net-alias web kunchakavikram/hello-flask:v1
+	$docker run -d --net mynet --name c3 --net-alias web kunchakavikram/hello-flask:v1
+	$docker run --rm --net mynet curlimages/curl -s web:5000
+
+	$docker run -e MYSQL_ROOT_PASSWORD=admin -e MYSQL_DATABASE=wordpress --name mysql -v db:/var/lib/mysql -d mariadb:latest
+	$docker run -e WORDPRESS_DB_USER=root -e WORDPRESS_DB_PASSWORD=admin --name wordpress --link mysql:mysql -p 80:80 -v wp:/var/www/html -d wordpress
+
+	$docker network create my_net
+	$docker run -e MYSQL_ROOT_PASSWORD=admin -e MYSQL_DATABSE=wordpress --name mysql --net my_net -v db:/var/lib/mysql -d mariadb:latest
+	$docker run -e WORDPRESS_DB_USER=root -e WORDPRESS_DB_PASSWORD=admin --name wordpress --net my_net -p 80:80 -v nginx:/var/www/html -d wordpress
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,276 @@
+Container Orchestration
+************************
+	1. Containers are ephemeral by nature.
+	2. They stop when process inside them finishes, or ends because of an error.
+	3. Also a single container per service may not be sufficient enough to handle the growing traffic to the application.
+	4. In all the above scenarios we need a tool that can bring up the stopped containers or spin up new one's to handle the growing traffic and to ensure Load balancing & High availability of the application all the time. 
+	5.This is where container orchestration comes into play!!!
+
+What is Container Orchestration
+*******************************
+Container orchestration is all about managing the lifecycles of containers, especially in large, dynamic environments.
+1. Provisioning and deployment of containers
+2. Scaling up or removing containers to spread application load evenly across host infrastructure 
+3. Movement of containers from one host to another if there is a shortage of resources in a host, or if a host dies
+4. Load balancing of service discovery between containers
+
+
+Docker Swarm
+************
+1. Swarm is Docker's built in container orchestrator solution, its main purpose is to manage containers in a cluster, i.e. a set of connected machines that work together.
+2. When a new machine joins the cluster, it becomes a node in that swarm.
+3. Using Docker Swarm we can achieve high availability, load balancing and Decentralized access of our applications.
+4. Swarm comes built into the Docker Engine, you don't need to install anything to get started.
+
+
+What can one do by using Docker Swarm
+*************************************
+1. Deploying new containers to replace failed ones 
+2. Scale the number of containers for load balancing
+3. Rolling out application updates among the containers in rolling 
+update fashion
+4. Rollback of applications to older versions
+5. Bring down a node for maintenance without any application 
+downtime
+
+Docker Swarm Architecture
+*************************
+1. Manager: manages the cluster 
+2. Worker: runs tasks assigned by scheduler
+3. Scheduler: schedules containers onto nodes depending upon rules and filters 
+4. Discovery service: helps Swarm Manager discover new nodes and fetch the available nodes
+5. Store: stores state of cluster; like cluster and swarm services info. Essentially a key-value db
+
+
+Docker Swarm: Overlay driver
+****************************
+1. Bridge networks apply to containers running on the same Docker daemon host
+2. For communication among containers running on different Docker daemon hosts like in swarm, we should use an overlay network
+3. If you create swarm services and do not specify a network, they are connected to default ingress network, which is also of overlay type
+4. Overlay network spans across the entire swarm cluster, allowing communication between containers across multiple nodes
+
+	$docker network ls
+
+	$docker network create --driver=overlay my_net
+
+
+*************
+Installation
+*************
+Docker swarm
+https://docs.docker.com/engine/swarn/
+https://docs.docker.com/engine/swarn/swarn-tutorial/
+https://docs.docker.com/engine/awarm/swarm-tutorial/#open-protocols-and-ports-between-the-hosts 
+https://github.com/jpstazzo/container.training/blob/main/slides/mare/healthchecks.nd
+https://hub.docker.com/r/dockersamples/visualizer 
+https://docs.docker.com/engine/swarm/raft/
+https://docs.docker.com/engine/swarn/services/placement-constraints 
+https://thenewstack.io/methods-dealing-container-storage/ 
+https://thevorkaround.com/2019/05/15/docker-sware-persistent-storage.html
+
+#Ports need to be allowed or opened in Security-group or firewalld
+------------------------------------------------------------------
+TCP port 2377 for cluster management communications 
+TCP and UDP port 7946 for communication among nodes 
+UDP port 4789 for overlay network traffic
+
+#! /bin/bash
+sudo yum update -y 
+sudo yum install docker
+sudo usermod -aG docker ec2-user
+sudo systemctl enable --now docker
+
+To start the docker swarm
+-------------------------
+Create 3 ec2 machines and install docker in them
+Now login into one of the ec2 instance and follow the steps
+	
+	$docker swarm init --advertise-addr MANAGER_IP  (Here MANAGER_IP is the private IPAddress of the ec2 instance. We use private IPAddress of the ec2 instance because it is static, that means the private IPAddress wont change even the ec2 instance reboot)
+
+	Now it gives a command which need to run on the worker nodes
+
+	$docker swarm join --token jslkdjflksjadlkjflksadjflj MANAGER_IP:2377
+
+Nodes
+-----
+$docker node ls  -- list the number of nodes
+
+
+
+$docker network ls | grep -i overlay
+	
+Docker Service
+--------------
+1. To deploy an application image when Docker Engine is in swarm mode, you create a service
+2. A service is the image for a microservice like an HTTP server, a database, or any other type of executable program that you wish to run in a distributed environment.
+3. A service needs container image to use, the port where the swarm makes the service available outside the swarm, an overlay network for the service to connect to other services in the swarm and the number of replicas of the image to run in the swarm.
+
+	Create a Service
+	----------------
+	$dockor service create replicas 5 -P 80:00 name <service_name> <image_name>
+	$docker service create -d --replicas 5 -p 80:80 --name web nginx:lastest
+
+	$docker service ls
+
+	$docker service rm <service_name>
+	$docker service rm web (name of the service)
+
+	$docker service ps web (name of the service)
+
+Docker Swarm Visualizer
+-----------------------
+
+$docker service create \
+  --name=viz \
+  --publish=8080:8080/tcp \
+  --constraint=node.role==manager \
+  --mount=type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
+  dockersamples/visualizer
+
+$docker service create  --replicas 5 -p 80:80 --name web nginx
+
+Example to check the load balancing in swarm cluster
+------------------------------------------------------
+$docker pull kunchalavikram/flask-simpledetails:v1
+
+$docker service create \
+	--name demo \
+	-p 80:5000 \ 
+	--replicas 5 \
+	kunchalavikram/flask-simpledetails:v1
+
+Now access the application on IPAddress/details
+
+$docker service ps web (name of the service)
+$docker node ps docker-slave01 (name of the node)
+
+
+Scale the service
+-----------------
+$docker service scale <service_name>=10
+
+update:
+-------
+$docker service update --force <service_name>  --- it will load share the containers.
+$docker service update --image nginx:1.14.0 --replicas 15 <service_name>
+$docker service update --image <new_image> --update-parallelism 2 --update-delay 10s <service_name>
+
+rollback:
+---------
+$docker service update --rollback <service_name>
+
+
+node-update
+-----------
+$docker node ls
+$docker node update --avaliability drain <node_id>
+$docker node update --avaliability active <node_id>
+
+Let's say, the node is up and running after maintenance
+By default, swarm doesn't re-deploy the containers the node was previously running. 
+We need to force the cluster to share the load among the available nodes
+$docker service update --force <service_name>
+
+
+
+promote vs demote
+-----------------
+$docker node promote     - promote one or more nodes to manager in the swarm
+$docker node demote		 - demote one or more nodes to manager in the swarm
+
+leave
+------
+$docker swarm leave 
+
+
+Docker Swarm Overlay driver
+---------------------------
+Creating overlay network
+	$docker network create --driver overlay my_overlay
+
+	$docker service create --replicas 5 -p 80:80 --network my_overlay --name web nginx:latest
+
+	$docker service inspect web
+
+
+
+docker service ls
+docker service ps <service_name>
+docker node ps
+docker node ps <node_name>
+docker node inspect self or master1 or worker1
+
+Docker Stack
+------------
+1. Docker stack is used to deploy a complete application stack to the swarm.
+2. Production grade docker-compose
+3. Docker-compose is better suited for development scenarios and is a single host deployment solution 
+4. Uses the same syntax as docker-compose file, but with a new section 'deploy' added to manifest file 
+5. Docker stack ignores "build" instructions. You can't build new images using the stack commands. It needs pre-built images to exist
+
+Example
+--------
+version: "3.3"
+services:
+	wordpress: 
+		image: wordpress
+		depends_on: 
+			- mysql
+		ports:
+			- 8080:90
+		deploy:
+			replicas: 1 
+			restart_policy: 
+				condition: always 
+			placement:
+				constraints:
+					- node.role == manager
+		environment:
+			WORDPRESS_DB_HOST: mysql 
+			WORDPRESS_DB_NAME: wordpress 
+			WORDPRESS_DB_USER: wordpress 
+			WORDPRESS_DB_PASSWORD: wordpress
+		volumes:
+			- wordpress-data: /var/www/html 
+		networks:
+			- my net
+	mysql:
+		image: mariadb 
+		deploy:
+			replicas: 1 
+			restart_policy:
+				condition: on-failure.
+			placement:
+				constraints:
+					- node.role == worker
+		environment:
+			MYSQL_ROOT PASSWORD: wordpress 
+			MYSQL DATABASE: wordpress 
+			MYSQL_USER: Wordpress 
+			MYSQL_PASSWORD: wordpress
+		volumes:
+			- mysql-data: /var/lib/mysql 
+		networks:
+			- my_net
+networks:
+	my_net:
+volumes: 
+	mysql-data: 
+	wordpress-data:
+
+Docker stack deploy
+-------------------
+$docker stack deploy -c <docker-stack.yml> <stack-name>
+$docker stack ls
+$docker stack ps <stack-name>
+
+$docker service ls
+$docker stack rm <stack-name>
+
+
+overlay networks
+-----------------
+$docker network create -d overlay my overlay
+$docker network create --subnet 10.1.0.0/24 --gateway 10.1.0.1 -d overlay mynet -> Create an overlay network and specify a subnet 
+$docker service create --name psql --network my_overlay -e POSTGRES_PASSWORD=pass postgres
+$docker service create --name drupal --network my_overlay -p 80:80 drupal

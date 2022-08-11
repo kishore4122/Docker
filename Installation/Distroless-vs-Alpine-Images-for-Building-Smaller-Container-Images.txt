@@ -1,0 +1,249 @@
+Contents:
+*********
+	1. Container Security
+	2. Need for smaller docker images 
+	3. Multistage Builds for GO Application
+	4. Alpine Images 
+	5. Distroless Images
+
+1.Why Container Security
+**********************
+	1. Containers are increasingly becoming popular but do present security risks that can potentially cause businesses millions of dollars due to hackers gaining access to valuable data inside the containers.
+	2. Containerization is one of the core stages in the DevOps process where security must be looked at on a serious note 
+	3. A container image can have many bugs and security vulnerabilities, which gives a good opportunity for hackers to get access to the application or data present on the container costing millions to the company. 
+	4. Hence, it is crucial to scan and audit the images and containers regularly 
+	5. DevSecOps plays an important role in adding security to the DevOps processes, including scanning images and containers for bugs and vulnerabilities
+
+	When building Docker images, we're often concerned with two things: 
+		1. The security (through scanning each image layer)
+		2. The size of the image (Multistage builds & Distroless Images)
+
+		When it comes to container security, distroless or minimal base images, like alpine, reduce the attack surface.
+
+	Security  Scan
+	---------------
+	1. A container image is composed of several layers, and each one of them could be a source of a vulnerability 
+	2. So, scanning each layer is very crucial in DevSecOps
+	3. Container scanning is the process of identifying vulnerabilities within containers by using scanning tools Like Synk, Anchore etc
+	4. It's key to container security, and enables developers and cybersecurity teams to fix security threats in containerized applications before deployment
+
+2.Smaller Docker Image
+***********************
+	1. Container images should be as small and lightweight as possible
+	2. They should pack only the application code and its dependencies. Rest everything to be scrapped off to bring down its size including the build dependencies 
+	3. The smaller the image the lesser is the attack surface to the container and moreover are easy to distribute and deploy
+	4. Larger images can have more software vulnerabilities in the form of vulnerable dependencies including potential security holes
+	5. Better to use alpine images like FROM golang: alpine or node: alpine
+	6. Alpine images are small, and light weighted as they have many files and programs removed, leaving only the dependencies just enough to run your app
+
+	But why smaller docker images?
+	------------------------------
+	1. They pack very few system utilities
+	2. Smaller containers can be moved much easier and faster
+	3. Makes pulling container images faster thus improving the performance of the build and deployment processes
+	4. Smaller containers are also efficient in utilizing disk space and memory due to less running processes
+
+	Dockerfile Best Practices for smaller and cleaner images
+	---------------------------------------------------------
+	The overhead of scanning the docker images for detecting vulnerabilities, investigating security issues, and reporting and fixing them after the deployment, can be prevented by following the best practices for building & optimizing a docker image
+
+	Some best practices:
+		1. Do not run containers as ROOT
+		2. Avoid copying unnecessary files. Usedockerignore 
+		3. Merge layers
+		4. Using Alpine or Distroless images as base images 
+		5. Using Multistage Builds 
+		6. Health checks
+		7. Avoid exposing unnecessary ports 
+		8. Hardcoding the credentials
+
+	Choosing the correct base image
+	-------------------------------
+	1. Docker Hub hosts more than 7 million repositories
+	2. Not all images are secure
+	3. Some of the images can be malicious, created by following poor practices and thus leading to vulnerabilities
+	4. Some images can be old, with unmaintained code and packages
+
+	Scanning a standard image
+	-------------------------
+	$anchore-cli image vuln python all  -- it shows the vulnarabilites which are critical,high,low,medium
+	$anchore-cli image vuln python:3-slim-buster all -- it shows the vulnarabilites which are critical,high,low,medium
+
+
+3.Single VS Multi stage build
+********************************
+
+	Multistage builds
+	-----------------
+
+	what if multistage build doesnot reduce the image size?
+		1. Remove unwanted binaries and utilities like yum, apt, npm, bash etc leaving only required dependencies
+		2. We know, docker containers should wrap a single process and contain the bare minimal to run it. You don't need an operating system
+
+	Still no change?
+		1. Use Alpine images as the base image because it is much easier to use standard debugging tools and install dependencies
+		2. Use distroless images, a project from Google (Java users can use Jib)
+
+
+4.Alpine Images
+***************
+	1. Alpine Linux is a Linux distribution built around musl libc and BusyBox
+	2. It is only 5MB in size which makes it a great image base for utilities and even production applications
+	3. Using Alpine Linux as the base image makes the containers smaller than most distribution base images like centos, ubuntu etc
+	4. By using Alpine linux as the base image and adding only required dependencies/artifactson top of it, results in smaller and cleaner docker image
+
+
+		FROM maven:3.6..-jdk-8									FROM maven:3.6.1-jdk-8-alpine
+		COPY ./ ./												COPY ./ ./
+		RUN mvn clean package									RUN mvn clean package
+		CMD ["java", "-jar", "target/demo-0.0.1-SNAPSHOT.jar"]	CMD ["java", "-jar", "target/demo-0.0.1-SNAPSHOT.jar"]
+
+				Size: 594MB													Size:190MB
+
+
+5.Distroless Container Images
+******************************
+	1. Pioneered by Google to improve security and container size
+	2. Distroless Container Images are language focused Docker images, sans the operating system distribution
+	3. Distroless images only contains your application and its runtime dependencies, not other usual OS package managers, Linux shells or any such programs which we usually would expect in a standard Linux distribution
+	4. This approach creates a smaller attack surface, reduces compliance scope, and results in a small, lean and clean container images and thus increases security
+	5. Google has published a set of distroless container images for different languages
+
+	Benefits?
+	---------
+		1. Improves container security. 
+		2. Reduces container size. 
+		3. Reduces compliance scope.
+		4. Improves container distribution performances. 
+		5. Cost-efficient by utilizing lesser resources.
+
+		https://github.com/GoogleContainerTools/distroless
+
+	Distroless VS Alpine
+	--------------------
+		Distroless containers by default does not have a shell for debugging
+
+		$ docker run -d -it --name node node: 8 
+		$ docker exec -it node bash
+		root@7c0948de6ele: /#
+
+		$ docker run -d -it --name node gcr.io/distroless/nodejs: 16 
+		$ docker exec -it node bash
+		OCI runtime exec failed: exec failed: container_linux.go:380: starting container process caused: 
+		exec: "bash": executable file not found in $PATH: unknown
+
+		$ docker exec -it node sh
+		OCI runtime exec failed: exec failed: container_linux.go:380: starting container process caused: 
+		exec: "sh": executable file not found in $PATH: unknown.
+
+Container Security  Tools
+*************************
+1. Scans the containers for all the vulnerabilities and monitor them regularly against any attack, issue, or new bug
+2. They mostly work by scanning installed OS packages and comparing versions to the CVE(Common Vulnerabilities and Exposures)database
+
+Some Container Scanners
+------------------------
+	- Anchore Engine 
+	- Clair 
+	- Aquasecurity/ Trivy 
+	- Twistlock
+	- Qualys 
+	- Sysdig Falco
+	- Blackdug
+	- Cilium
+
+	https://teachbeacon.com/security/17-open-source-container-security-tools
+
+Anchore
+-------
+1. A container static analysis tool for inspecting container security using CVE data and user-defined policies
+2. In addition to CVE-based security vulnerability reporting, Anchore Engine can evaluate Docker images using custom policies
+3. Policies result in a Pass or Fail outcome. Policies are based on whitelists, blacklists, credentials, file contents, configuration types, or other user-generated cues.
+
+Anchore Engine
+--------------
+1. Anchore Engine is an open-source project that provides a centralized service for inspection, analysis, and certification of container images
+2. It is provided as a Docker image that can be run standalone or within an orchestration platform such as Kubernetes
+3. Anchore has both Enterprise and Open-Source version
+4. Anchore Engine/Scanner is the core service of Anchore that can be accessed directly through a RESTful API or via Anchore CLI
+	
+		
+				anchore CLI  ------------------> anchore Engine
+
+How Anchore works?
+------------------
+Anchor essentially has discrete phases for each image analyzed:
+	1. Fetch : the image content and extract it, but never execute it
+	2. Analyze : the image by running a set of Anchore analyzers over the image content to extract and classify as much metadata as possible
+	3. Save : the resulting analysis in the database for future use and audit
+	4. Evaluate : policies against the analysis result
+	5. Update : to the latest external data (CVE) used for policy evaluation and vulnerability scanning
+	6. Notify : users of changes to policy evaluations and vulnerability matches 
+	7. Repeat : 5 & 6 on intervals to ensure latest external data and updated image evaluations
+
+
+	Analysis Result + External CVE + User Exceptiions = 
+
+Installing docker compose
+-------------------------
+	Download docker compose file from https://github.com/docker/compose
+
+	curl -L "https://github.com/docker/compose/releases/download/1.23.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+	OR 
+	Just download the docker-compose as per your linux distro
+	$chmod a+x docker-compose-......-x86_64
+	$mv docker-compose-......-x86_64 /usr/local/bin/docker-compose
+	$chown root:root usr/local/bin/docker-compose
+
+Installing Anchore Engine
+-------------------------
+Go to Anchore github page : https://github.com/anchore
+							https://github.com/anchore/anchore-engine
+							https://github.com/anchore/anchore-cli
+
+							https://engine.anchore.io/docs/quickstart/
+							
+	curl https://engine.anchore.io/docs/quickstart/docker-compose.yml > docker-compose.yml
+
+	$docker-compose up -d
+	$docker-compose ps
+	$docker-compose exec api anchore-cli system status
+
+Installing Anchore CLI
+----------------------
+Install using PIP
+	$apt-get install python3-pip -y
+	$pip install anchorecli
+	$anchore-cli --help
+
+
+1. By default, the Anchore CLI tries to connect to the Anchore Engine at http://localhost:8228/v1 with no authentication
+2. The username, password, and URL for the server can be passed to the Anchore CLI as command-line arguments or through Environment variables 
+
+	$curl http://ipaddressofhost:8228/v1
+
+	$anchore-cli --url http://ipaddressofhost:8228/v1 system status
+
+	$anchore-cli --u admin -p foobar --url://ipaddressofhost:8228/v1 system status
+
+	export ANCHORE_CLI_URL=http://ipaddressofhost:8228/v1
+	export ANCHORE_CLI_USER=admin
+	export ANCHORE_CLI_PASS=foobar
+
+
+	https://github.com/kunchalavikram1427/container_security
+
+	1. Adding a container image for analysis
+		$anchore-cli image add <image>
+
+	2. Waiting for the image to complete the analysis (from analyzing to analyzed) 
+		$anchore-cli image wait <image>
+
+	3. List images analyzed by the Anchore Engine: 
+		$anchore-cli image list
+	4. View the scan results and list out all of the known vulnerabilities 	
+		$anchore-cli image vuln <image>
+
+	5. To run a policy check
+		$anchore-cli evaluate check <image> --detail

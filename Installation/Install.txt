@@ -1,0 +1,53 @@
+Docker Hub: hub.docker.com
+
+https://container.training/
+
+List of commands: https://docs.docker.com/engine/reference/commandline/docker/
+References: https://docs.docker.com/engine/reference/
+Basics: https://docker-curriculum.com/
+Docker-in-docker: https://itnext.io/docker-in-docker-521958d34efd, https://devopscube.com/run-docker-in-docker/
+ngrok: https://ngrok.com/
+Nexus Documentaiton: https://help.sonartype.com/repomanager3 ; https://hub.docker.com/r/sonartype/nexus3
+Subnets: https://www.freecodecamp.org/news/subnet-cheat-sheet-24-subnet-mask-30-26-27-29-and-other-ip-address-cidr-network-references/ ; https://www.cloudflare.com/en-in/learning/network-layer/what-is-a-subnet/
+
+DCA: https://github.com/Evalla/DCA
+DCA: https://medium.com/bb-tutorials-and-thoughts/250-practice-questions-for-the-dca-exam-84f3b9e8f5ce
+
+Download CLI/Daemon: https://download.docker.com/win/static/stable/x86_64/
+
+---------------------------------------------------
+Docker Introduction
+--------------------------------------------------
+https://www.linuxjournal.com/content/docker-lightweight-linux-containers-consistent-development-and-deployment
+https://blog.jayway.com/2015/03/21/a-not-very-short-introduction-to-docker/
+
+
+-------------------------------
+Installation
+-------------------------------
+https://learnk8s.io/installing-docker-kubernetes-windows
+
+
+Setup Java & Maven
+-------------------
+Java-8:
+sudo yum list | grep openjdk
+sudo yum install -y java-1.8.8-openjdk
+sudo yum install -y java-1.8.8-openjdk-devel.x86_64
+
+Java-11:
+sudo amazon-linux-extras install epel
+sudo amazon-linux-extras install java-openjdk11 -y
+sudo yun install epel-release java-11-openjdk-devel -y(ignore)
+
+sudo alternatives --config java
+sudo /usr/sbin/alternatives--set java /usr/lib/jvm/jre-1.8.8-openjdk/bin/java
+
+Maven:
+cd /opt
+sudo curl -0 https://dlcdn.apache.org/maven/maven-3/3.8.4/binaries/apache-maven-3.8.4-bin.tar.gz 
+sudo tar -xvzf apache-maven-3.8.4-bin.tar.gz
+echo "export M2_HOME="/opt/apache-maven-3.8.4" >> ~/.bashre
+echo "export PATH="$PATH:/opt/apache-maven-3.8.4/bin" >> ~/.bashrc 
+source/.bashre
+mvn -version
