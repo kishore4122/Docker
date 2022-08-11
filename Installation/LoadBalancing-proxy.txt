@@ -8,7 +8,8 @@ Content:
 
 Load Balancers:
 ***************
-	1. Load balancing is the process of distributing network traffic across a group of backend servers, also known as a server farm or server pool.
+	1. Load balancing is the process of distributing network traffic across a group of backend servers, 
+		also known as a server farm or server pool.
 	2. This ensures no single server bears too much demand/load.
 	3. By spreading the load evenly, load balancing improves application  responsiveness.
 	4. It also increases availability of applications and websites for users.
@@ -17,10 +18,15 @@ Load Balancers:
 
 		EndUsers  ---> Internet ----> LoadBalancer ---> Application servers
 
-	6. Modern high-traffic websites must serve hundreds of thousands of concurrent requests from users or clients and return the content or application data, all in a fast and reliable manner.
+	6. Modern high-traffic websites must serve hundreds of thousands of concurrent requests from users or 
+		clients and return the content or application data, all in a fast and reliable manner.
 	7. To meet such high-traffic and volumes of requests, we generally require to adding more servers.
-	8. A load balancer acts as the "traffic cop" sitting in front of your servers and routing client requests across all servers capable of fulfilling those requests in a manner that maximizes speed and capacity utilization and ensures that no one server is overworked, which could degrade performance. 
-	9. If a single server goes down, the load balancer redirects traffic to the remaining online servers. When a new server is added to the server group, the load balancer automatically starts to send requests to it.
+	8. A load balancer acts as the "traffic cop" sitting in front of your servers and 
+		routing client requests across all servers capable of fulfilling those requests in a manner 
+		that maximizes speed and capacity utilization and ensures that no one server is overworked, 
+		which could degrade performance. 
+	9. If a single server goes down, the load balancer redirects traffic to the remaining online servers. 
+		When a new server is added to the server group, the load balancer automatically starts to send requests to it.
 
 	Load Balancer Uses:
 	-------------------
@@ -38,20 +44,30 @@ Load Balancers:
 	Hardware VS Software load balancing
 	-----------------------------------
 	1. Load balancers typically come in two flavors: hardware-based and software-based.
-	2. Vendors of hardware-based solutions load proprietary software onto the machine they provide, which often uses specialized processors. To cope with increasing traffic at your website, you have to buy more or bigger machines from the vendor.
-	3. Software LB solutions generally run on hardware, making them less expensive and more flexible. You can install the software on the hardware of your choice or in cloud environments like AWS EC2.
+	2. Vendors of hardware-based solutions load proprietary software onto the machine they provide, 
+		which often uses specialized processors. 
+		To cope with increasing traffic at your website, you have to buy more or bigger machines from the vendor.
+	3. Software LB solutions generally run on hardware, making them less expensive and more flexible. 
+		You can install the software on the hardware of your choice or in cloud environments like AWS EC2.
 
 	Cloud Load Balancers
 	--------------------
-	1. Cloud Load Balancing is a fully distributed, software-defined managed service. It isn't hardware-based, so you don't need to manage a physical load balancing infrastructure.
-	2. AWS offers three types of load balancers (ELB), adapted for various scenarios: Classic Load Balancer (Older Layer 4/7)., Application Load Balancer (Layer 7), and Network Load Balancer (Layer 4).
+	1. Cloud Load Balancing is a fully distributed, software-defined managed service. 
+		It isn't hardware-based, so you don't need to manage a physical load balancing infrastructure.
+	2. AWS offers three types of load balancers (ELB), adapted for various scenarios: 
+		Classic Load Balancer (Older Layer 4/7), 
+		Application Load Balancer (Layer 7), and Network Load Balancer (Layer 4).
 
 	Load Balancing Algorithms:
 	**************************
-	1. Round Robin - Requests are distributed across the group of servers sequentially.
-	2. Least Connections - Requests are sent to the backend server with the least number of requests. The relative computing capacity is considered when deciding where the request should be sent
-	3. Least Time - Sends requests to the server selected by a formula that combines the fastest response time and fewest active connections. Exclusive to NGINX Plus.
-	4. Hash - Distributes requests based on a key you define, such as the client IP address or the request URL. NGINX Plus can optionally apply a consistent hash to minimize redistribution of loads if the set of upstream servers ∞ changes.
+	1. Round Robin 	- Requests are distributed across the group of servers sequentially.
+	2. Least Connections - Requests are sent to the backend server with the least number of requests. 
+							The relative computing capacity is considered when deciding where the request should be sent
+	3. Least Time - Sends requests to the server selected by a formula that combines the fastest response time and 
+					fewest active connections. Exclusive to NGINX Plus.
+	4. Hash - Distributes requests based on a key you define, such as the client IP address or the request URL. 
+				NGINX Plus can optionally apply a consistent hash to minimize redistribution of loads if the set of upstream servers ∞ 
+				changes.
 
 
 
@@ -68,19 +84,22 @@ Proxy Servers
 	Reverse Proxy Server
 	--------------------
 	1. A Reverse Proxy acts as a server for the users.
-	2. Each and every request made by a user is directed towards a reverse proxy, thereby acting as an interface for all the servers in the back end.
+	2. Each and every request made by a user is directed towards a reverse proxy, 
+		thereby acting as an interface for all the servers in the back end.
 	3. It receives initial HTTP connection requests, acting like the actual endpoint.
 
 
-
 		you -------> Internet -------> Reverse Proxy --------> web server
+
 
 	Advantages of Reverse Proxy Server
 	----------------------------------
 	1. A Reverse Proxy hides the topological design of the servers in the background.
 	2. Also act as a Cache, which should mean reduced load on the back-end servers.
 	3. Makes it easy to log and audit all the requests.
-	4. Anonymity and security. Since reverse proxies intercept all the incoming requests, they serve as an additional level of protection for backend servers. It helps prevent any malicious actors from abusing web servers by blocking suspicious traffic from specific IP addresses.
+	4. Anonymity and security. Since reverse proxies intercept all the incoming requests, 
+		they serve as an additional level of protection for backend servers. 
+		It helps prevent any malicious actors from abusing web servers by blocking suspicious traffic from specific IP addresses.
 	5. Load balancing. Essentially Load Balancer is one of the applications of a Reverse Proxy
 
 
@@ -88,7 +107,8 @@ Proxy Servers
 	Forward Proxy Server
 	--------------------
 	1. A Forward Proxy sits in front of a user and acts as a mediator between users and the web servers they access.
-	2. The user's request goes through the forward proxy first and then reaches the web page. Once the data from the server is retrieved, it is sent to the proxy server, redirecting it back to the requester.
+	2. The user's request goes through the forward proxy first and then reaches the web page. 
+		Once the data from the server is retrieved, it is sent to the proxy server, redirecting it back to the requester.
 
 
 							----Internet------------Reverse Proxy--------
@@ -109,7 +129,8 @@ Proxy Servers
 	
 	Forward VS Reverse Proxy
 	------------------------
-	1. Forward proxies ensure that websites never communicate directly with a user. On the other hand, reverse proxies ensure that users would not communicate directly with a back-end server.
+	1. Forward proxies ensure that websites never communicate directly with a user. 
+		On the other hand, Reverse proxies ensure that users would not communicate directly with a back-end server.
 
 
 -------------------------------------------
@@ -135,7 +156,7 @@ Load Balancing
 	#Copy the IPAddresses of each container and paste them below
 
 	upstream servers {
-	server 15.206.89.202:8080;
+	server 15.206.89.202:8080;		# IP addresses of the container we run above
 	server 15.206.89.202:8081;
 	server 15.206.89.202:8082;
 	}
@@ -195,7 +216,8 @@ Load Balancing
 
 --> With HAPProxy:
 
-	HA Proxy: https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/; https://hub.docker.com/r/haproxytech/haproxy-ubuntu
+	HA Proxy: https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/; 
+				https://hub.docker.com/r/haproxytech/haproxy-ubuntu
 
 	#Create Custom Bridge network
 		$docker network create my_net
@@ -207,7 +229,8 @@ Load Balancing
 	$docker run -d --net my_net --name c3 kunchalavikram/hello-flask:v1
 
 
-	# As we bind the volume to the host machine now we can able to change the configuration of haproxy in our local machine by going into
+	# As we bind the volume to the host machine now we can able to change the configuration of haproxy in our local machine 
+		by going into
 		the /var/lib/docker/volumes/haproxy/_data/haproxy.cfg
 		Now in round robin balancing replace the IPAddress with container names because we are running the HAPROXY and CONTAINERS
 		in a CUSTOM BRIDGE NETWORK (my_net)
@@ -255,9 +278,11 @@ DNS Round Robin (--net-alias)
 *****************************
 	1. DNS round robin is one of load balancing approaches.
 	2. With DNS round robin, we rely on the DNS server responses.
-	3. DNS servers respond to DNS requests not only with a single IP address but with one out of a list of possible IP addresses of containers that host the same services.
+	3. DNS servers respond to DNS requests not only with a single IP address 
+		but with one out of a list of possible IP addresses of containers that host the same services.
 	4. In docker, this is made possible by Embedded DNS Server for containers in user-defined networks since Docker 1.10.
-	5. In particular, containers that are run with a network alias (--net-alias) are resolved by this embedded DNS with the IP address of the container when the alias is used.
+	5. In particular, containers that are run with a network alias (--net-alias) are resolved 
+		by this embedded DNS with the IP address of the container when the alias is used.
 
 
 
